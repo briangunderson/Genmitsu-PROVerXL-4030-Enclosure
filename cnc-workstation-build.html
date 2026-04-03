@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rental-Friendly CNC Workstation Build Plan — PROVerXL 4030</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232733;
+    --border: #2d3140;
+    --text: #e4e6ed;
+    --text-dim: #8b8fa3;
+    --accent: #4a9eff;
+    --accent2: #ff6b4a;
+    --green: #3dd68c;
+    --yellow: #f5c542;
+    --orange: #ff8c42;
+    --red: #ff4a6b;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    padding: 0 0 60px 0;
+  }
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #232733 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 24px 32px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+  header p { color: var(--text-dim); font-size: 0.95rem; max-width: 600px; margin: 0 auto; }
+  .badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin: 12px 4px 0;
+  }
+  .badge-blue { background: rgba(74,158,255,0.15); color: var(--accent); }
+  .badge-green { background: rgba(61,214,140,0.15); color: var(--green); }
+  .badge-orange { background: rgba(255,140,66,0.15); color: var(--orange); }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+
+  /* Machine specs card */
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .spec-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .spec-card .label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .spec-card .value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+  .spec-card .sub { font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; }
+
+  /* Sections */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 24px 0;
+    overflow: hidden;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .section-header:hover { background: var(--surface2); }
+  .section-header .number {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 1.1rem; font-weight: 600; flex-grow: 1; }
+  .section-header .est {
+    font-size: 0.8rem;
+    color: var(--green);
+    font-weight: 600;
+    background: rgba(61,214,140,0.1);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .section-header .chevron {
+    font-size: 1.2rem;
+    color: var(--text-dim);
+    transition: transform 0.25s;
+  }
+  .section.open .section-header .chevron { transform: rotate(180deg); }
+  .section-body { display: none; padding: 0 20px 20px; }
+  .section.open .section-body { display: block; }
+
+  p + p { margin-top: 12px; }
+  .section-body h3 { font-size: 0.95rem; font-weight: 600; color: var(--accent); margin: 20px 0 8px; }
+  .section-body h3:first-child { margin-top: 4px; }
+  .section-body ul { margin: 8px 0 8px 20px; }
+  .section-body li { margin-bottom: 6px; color: var(--text); }
+  .section-body li::marker { color: var(--text-dim); }
+
+  .tip {
+    background: rgba(74,158,255,0.08);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+  .tip strong { color: var(--accent); }
+
+  .warning {
+    background: rgba(255,74,107,0.08);
+    border-left: 3px solid var(--red);
+    padding: 12px 16px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+  .warning strong { color: var(--red); }
+
+  /* BOM tables */
+  .bom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 12px 0;
+  }
+  .bom-table thead { background: var(--surface2); }
+  .bom-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+  }
+  .bom-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .bom-table tr:last-child td { border-bottom: none; }
+  .bom-table .price { color: var(--green); font-weight: 600; white-space: nowrap; }
+  .bom-table .qty { color: var(--yellow); font-weight: 600; text-align: center; }
+  .bom-table a { color: var(--accent); text-decoration: none; }
+  .bom-table a:hover { text-decoration: underline; }
+  .bom-table .subtotal-row { background: var(--surface2); font-weight: 600; }
+  .bom-table .subtotal-row td { color: var(--green); }
+  .bom-table .note { font-size: 0.78rem; color: var(--text-dim); display: block; margin-top: 3px; }
+
+  /* Grand total */
+  .grand-total {
+    background: linear-gradient(135deg, rgba(74,158,255,0.1), rgba(61,214,140,0.1));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    margin: 24px 0;
+  }
+  .grand-total .label { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .grand-total .amount { font-size: 2.2rem; font-weight: 800; color: var(--green); margin: 4px 0; }
+  .grand-total .range { font-size: 0.85rem; color: var(--text-dim); }
+
+  /* Links section */
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .link-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    transition: border-color 0.15s;
+  }
+  .link-card:hover { border-color: var(--accent); }
+  .link-card .icon { font-size: 1.4rem; }
+  .link-card .info { flex: 1; }
+  .link-card .info .title { color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+  .link-card .info .desc { color: var(--text-dim); font-size: 0.78rem; margin-top: 2px; }
+
+  .footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    margin-top: 40px;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.4rem; }
+    .specs-grid { grid-template-columns: 1fr 1fr; }
+    .bom-table { font-size: 0.78rem; }
+    .bom-table th, .bom-table td { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Rental-Friendly CNC Workstation</h1>
+  <p>Complete build plan for a self-contained, rolling PROVerXL 4030 station with enclosure, dust collection, and laser ventilation &mdash; zero permanent modifications.</p>
+  <span class="badge badge-blue">PROVerXL 4030</span>
+  <span class="badge badge-green">DeWalt DWP611</span>
+  <span class="badge badge-orange">10W+ 450nm Laser</span>
+</header>
+
+<div class="container">
+
+  <!-- Machine Specs -->
+  <div class="specs-grid">
+    <div class="spec-card">
+      <div class="label">Machine Footprint</div>
+      <div class="value">25" &times; 30"</div>
+      <div class="sub">641 &times; 756mm</div>
+    </div>
+    <div class="spec-card">
+      <div class="label">Work Area</div>
+      <div class="value">15.7" &times; 11.8"</div>
+      <div class="sub">400 &times; 300 &times; 110mm</div>
+    </div>
+    <div class="spec-card">
+      <div class="label">Machine Height</div>
+      <div class="value">~23"</div>
+      <div class="sub">580mm + DeWalt adds ~4"</div>
+    </div>
+    <div class="spec-card">
+      <div class="label">Machine Weight</div>
+      <div class="value">57 lbs</div>
+      <div class="sub">25.9 kg</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Rolling Cart / Table -->
+  <div class="section open">
+    <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="number">1</div>
+      <h2>Rolling Cart / Workbench</h2>
+      <span class="est">~$150–250</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <p>The foundation of the whole setup. Everything mounts to this, everything rolls with it. When you're done working, push it against the wall. When you want to cut, pull it out.</p>
+
+      <h3>Requirements</h3>
+      <ul>
+        <li><strong>Min surface size:</strong> 36" &times; 32" (enclosure needs ~35.4" &times; ~29.4" footprint)</li>
+        <li><strong>Weight capacity:</strong> 300+ lbs (machine ~57 lbs + enclosure ~40 lbs + dust collection ~30 lbs + materials)</li>
+        <li><strong>Locking casters:</strong> Non-negotiable. CNC vibration will walk an unlocked cart across the floor.</li>
+        <li><strong>Lower shelf:</strong> For shop vac + cyclone separator</li>
+      </ul>
+
+      <h3>Recommended Options</h3>
+      <ul>
+        <li><strong>Husky 46" Adjustable Height Workbench</strong> — steel frame, 46"&times;24" top, locking casters available, lower shelf. ~$200 at Home Depot.</li>
+        <li><strong>Keter Folding Work Table</strong> — cheaper (~$90), lighter duty, but the 700 lb rating is sufficient. No lower shelf though.</li>
+        <li><strong>DIY: 2&times;4 frame + 3/4" MDF top on heavy-duty casters</strong> — cheapest, fully customizable. Build a torsion box top for maximum flatness. Add a lower shelf from 3/4" plywood. Total materials ~$80–120.</li>
+      </ul>
+
+      <div class="tip">
+        <strong>Pro tip:</strong> Whatever you choose, add a 3/4" horse stall mat or thick rubber anti-fatigue mat between the cart and the floor. This decouples vibration from the finished basement floor and dramatically reduces transmitted noise to rooms above.
+      </div>
+
+      <table class="bom-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Est. Price</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Heavy-duty rolling workbench (46"+)<span class="note">Husky, Seville Classics, or DIY</span></td>
+            <td class="qty">1</td>
+            <td class="price">$120–200</td>
+            <td>Must support 300+ lbs with locking casters</td>
+          </tr>
+          <tr>
+            <td>Horse stall mat / rubber anti-vibration pad<span class="note">3/4" thick, cut to cart footprint</span></td>
+            <td class="qty">1</td>
+            <td class="price">$20–40</td>
+            <td>Tractor Supply, ~$45 for a 4'&times;6' mat you can cut</td>
+          </tr>
+          <tr>
+            <td>Power strip (heavy duty, 12-outlet, surge)<span class="note">Tripp Lite or similar, metal housing</span></td>
+            <td class="qty">1</td>
+            <td class="price">$25–35</td>
+            <td>Mount to cart frame with screws or zip ties</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 2: Enclosure -->
+  <div class="section">
+    <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="number">2</div>
+      <h2>Enclosure (Aluminum Extrusion + Polycarbonate)</h2>
+      <span class="est">~$400–600</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <p>The enclosure does triple duty: dust containment, noise reduction, and laser safety. The frame is 30mm aluminum extrusion with polycarbonate panels. A hinged front door gives full access to the work area.</p>
+
+      <h3>Design Reference</h3>
+      <p>Jason Webb published a full open-source design with Fusion 360 files and parts lists for exactly this machine: <a href="https://github.com/jasonwebb/Genmitsu-PROVerXL-4030-Enclosure" target="_blank" style="color: var(--accent);">github.com/jasonwebb/Genmitsu-PROVerXL-4030-Enclosure</a>. The design includes a slide-out drawer so you can pull the CNC out of the enclosure for workpiece changes, which is a clever touch. <strong>Your fork:</strong> <a href="https://github.com/briangunderson/Genmitsu-PROVerXL-4030-Enclosure" target="_blank" style="color: var(--green);">github.com/briangunderson/Genmitsu-PROVerXL-4030-Enclosure</a></p>
+
+      <h3>Key Dimensions (from the reference design)</h3>
+      <ul>
+        <li><strong>Frame outer:</strong> ~35.4" W &times; 29.4" D &times; 29.4" H</li>
+        <li><strong>Extrusion:</strong> 30mm (EXM-3030) from T-Nutz</li>
+        <li><strong>Panels:</strong> 0.220" (~6mm) thick sheets</li>
+      </ul>
+
+      <h3>Modifications for Your Build</h3>
+      <ul>
+        <li><strong>Use polycarbonate instead of acrylic.</strong> You're running a 10W+ 450nm laser. Polycarbonate blocks UV and near-UV wavelengths far better than acrylic, and it won't shatter. Get OD4+ rated orange/amber tinted polycarb sheets for the door panel so you can watch the laser work safely.</li>
+        <li><strong>Add a 4" dust port</strong> on the back panel — a simple bulkhead fitting or a 3D-printed flange.</li>
+        <li><strong>Add a 4" fume exhaust port</strong> on a side or back panel for laser ventilation (separate from dust collection).</li>
+        <li><strong>Add foam weatherstrip tape</strong> to all panel edges and the door seal for improved noise isolation.</li>
+      </ul>
+
+      <div class="warning">
+        <strong>Laser safety:</strong> A 10W 450nm diode laser can cause instant, permanent eye damage from even reflected/scattered light. Clear acrylic or polycarbonate is NOT sufficient. Use OD4+ rated 450nm laser safety panels (orange/amber tinted) for any panel you'll look through while the laser is running. Alternatively, use opaque panels on all sides except the door.
+      </div>
+
+      <table class="bom-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Est. Price</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>30mm aluminum extrusion — 35.375"<span class="note">Frame width + door top/bottom rails</span></td>
+            <td class="qty">6</td>
+            <td class="price">$46</td>
+            <td><a href="https://www.tnutz.com/product/exm-3030/" target="_blank">T-Nutz</a></td>
+          </tr>
+          <tr>
+            <td>30mm aluminum extrusion — 29.375"<span class="note">Frame height + depth + door sides + drawer rails</span></td>
+            <td class="qty">12</td>
+            <td class="price">$79</td>
+            <td><a href="https://www.tnutz.com/product/exm-3030/" target="_blank">T-Nutz</a></td>
+          </tr>
+          <tr>
+            <td>3-way corner connectors with bolts</td>
+            <td class="qty">8</td>
+            <td class="price">$34</td>
+            <td><a href="https://www.tnutz.com/product/cbc-030-3d/" target="_blank">T-Nutz</a></td>
+          </tr>
+          <tr>
+            <td>2-way corner connectors with bolts<span class="note">For door frame</span></td>
+            <td class="qty">4</td>
+            <td class="price">$17</td>
+            <td><a href="https://www.tnutz.com/product/cbc-030-2d/" target="_blank">T-Nutz</a></td>
+          </tr>
+          <tr>
+            <td>Heavy-duty hinges for 30mm extrusion</td>
+            <td class="qty">2</td>
+            <td class="price">$17</td>
+            <td><a href="https://www.tnutz.com/product/hi-015/" target="_blank">T-Nutz</a></td>
+          </tr>
+          <tr>
+            <td>Handle for door</td>
+            <td class="qty">1</td>
+            <td class="price">$4</td>
+            <td><a href="https://www.tnutz.com/product/han-015/" target="_blank">T-Nutz</a></td>
+          </tr>
+          <tr>
+            <td>26" drawer slides, 70lb capacity (pair)</td>
+            <td class="qty">1</td>
+            <td class="price">$23</td>
+            <td><a href="https://www.mcmaster.com" target="_blank">McMaster-Carr</a></td>
+          </tr>
+          <tr>
+            <td>Polycarbonate sheets — 1/4" thick, 30"&times;36"<span class="note">Amber/orange OD4+ tinted for door; clear or opaque for sides</span></td>
+            <td class="qty">4–5</td>
+            <td class="price">$150–250</td>
+            <td>TAP Plastics, Amazon, or local plastics supplier</td>
+          </tr>
+          <tr>
+            <td>Panel gasket / rubber channel<span class="note">Holds panels in extrusion T-slot</span></td>
+            <td class="qty">~53 ft</td>
+            <td class="price">$30</td>
+            <td><a href="https://8020.net/40-2115.html" target="_blank">80/20 Inc</a></td>
+          </tr>
+          <tr>
+            <td>Door seal — bulb seal for T-slot</td>
+            <td class="qty">2 packs</td>
+            <td class="price">$17</td>
+            <td><a href="https://www.mcmaster.com" target="_blank">McMaster-Carr</a></td>
+          </tr>
+          <tr>
+            <td>Drawer slide mounting hardware<span class="note">M6 flanged button head + T-nuts</span></td>
+            <td class="qty">1 set</td>
+            <td class="price">$14</td>
+            <td>McMaster / T-Nutz</td>
+          </tr>
+          <tr>
+            <td>Toggle latches for door<span class="note">Adjustable draw latches to compress seal</span></td>
+            <td class="qty">2</td>
+            <td class="price">$12</td>
+            <td>Amazon</td>
+          </tr>
+          <tr>
+            <td>4" bulkhead dust port fitting</td>
+            <td class="qty">1</td>
+            <td class="price">$8</td>
+            <td>Amazon / Rockler</td>
+          </tr>
+          <tr>
+            <td>4" bulkhead exhaust port fitting<span class="note">For laser fume ventilation</span></td>
+            <td class="qty">1</td>
+            <td class="price">$8</td>
+            <td>Amazon / Rockler</td>
+          </tr>
+          <tr class="subtotal-row">
+            <td colspan="2">Enclosure Subtotal</td>
+            <td class="price">~$459–549</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 3: Dust Collection -->
+  <div class="section">
+    <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="number">3</div>
+      <h2>Dust Collection System</h2>
+      <span class="est">~$100–180</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <p>The DeWalt DWP611 on a PROVerXL cutting MDF or hardwood produces a LOT of fine dust. The enclosure contains it, but you need to actively pull it out. A shop vac with a cyclone separator is the standard approach — the cyclone catches 95%+ of the debris before it hits the vac filter, which means less filter changes and better sustained suction.</p>
+
+      <h3>Setup</h3>
+      <ul>
+        <li>Cyclone separator (Dust Deputy or similar) mounts to a 5-gallon bucket on the lower shelf of the cart</li>
+        <li>Shop vac sits next to it on the same shelf</li>
+        <li>4" flex hose runs from the enclosure's dust port down to the cyclone inlet</li>
+        <li>Cyclone outlet connects to shop vac inlet</li>
+        <li>Short run, no permanent plumbing — everything self-contained on the cart</li>
+      </ul>
+
+      <h3>Auto-Start</h3>
+      <p>An iVac Pro or similar current-sensing switch plugs inline with the DeWalt's power. When the router spins up, the switch automatically turns on the shop vac. When you stop the router, the vac runs for a few more seconds (adjustable delay) to clear residual dust, then shuts off. Zero manual steps.</p>
+
+      <div class="tip">
+        <strong>Smart home angle:</strong> Since you're a Home Assistant user, you could also automate this with a smart plug + power monitoring on the router circuit. But honestly, a dedicated iVac is more reliable for this — it's purpose-built, handles motor inrush current properly, and doesn't depend on your HA instance being up.
+      </div>
+
+      <table class="bom-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Est. Price</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Shop vac — 5-6 gallon, 5+ HP<span class="note">Ridgid, DeWalt, or similar wet/dry vac</span></td>
+            <td class="qty">1</td>
+            <td class="price">$60–100</td>
+            <td>If you already own one, skip this. Smaller is fine — the cyclone does the heavy lifting.</td>
+          </tr>
+          <tr>
+            <td>Dust Deputy cyclone separator<span class="note">Oneida Dust Deputy DIY kit or Super Dust Deputy</span></td>
+            <td class="qty">1</td>
+            <td class="price">$35–70</td>
+            <td>DIY kit ($35) mounts to any 5-gal bucket. Deluxe ($70) includes the bucket.</td>
+          </tr>
+          <tr>
+            <td>5-gallon bucket + lid<span class="note">Only if using DIY cyclone kit</span></td>
+            <td class="qty">1</td>
+            <td class="price">$5</td>
+            <td>Home Depot orange bucket works fine</td>
+          </tr>
+          <tr>
+            <td>4" flex hose — 6 ft<span class="note">Enclosure port to cyclone inlet</span></td>
+            <td class="qty">1</td>
+            <td class="price">$12</td>
+            <td>Clear reinforced PVC or standard dust collection flex hose</td>
+          </tr>
+          <tr>
+            <td>Hose clamps — 4"</td>
+            <td class="qty">4</td>
+            <td class="price">$6</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>iVac Pro Switch — current-sensing auto-start<span class="note">115V, 20A</span></td>
+            <td class="qty">1</td>
+            <td class="price">$35</td>
+            <td>Plugs the shop vac into the switch; senses router current on the other outlet</td>
+          </tr>
+          <tr class="subtotal-row">
+            <td colspan="2">Dust Collection Subtotal</td>
+            <td class="price">~$113–188</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 4: Laser Ventilation -->
+  <div class="section">
+    <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="number">4</div>
+      <h2>Laser Fume Ventilation</h2>
+      <span class="est">~$80–130</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <p>Laser cutting/engraving produces fumes that are genuinely hazardous to breathe — burning wood releases CO, VOCs, and fine particulates; acrylic releases cyanide compounds. You need active extraction to outside, and you've got a basement door and casement windows to work with.</p>
+
+      <h3>Setup</h3>
+      <ul>
+        <li><strong>Inline duct fan</strong> (4" AC Infinity Cloudline T4 or similar) mounted in-line between the enclosure exhaust port and the window</li>
+        <li><strong>4" insulated flex duct</strong> runs from enclosure to window — insulated duct reduces condensation and noise</li>
+        <li><strong>Window insert</strong> — cut a piece of 1" rigid foam insulation board to fit a casement window opening. Drill a 4" hole, mount a dryer vent cap on the outside face. When done, remove the insert and close the window.</li>
+        <li><strong>Optional: charcoal pre-filter</strong> inside the enclosure before the exhaust port, to reduce odor. Not a substitute for venting outside, but helps with residual smell.</li>
+      </ul>
+
+      <div class="tip">
+        <strong>Casement window note:</strong> Casement windows open outward with a crank. Your foam insert sits in the frame when the window is cranked open, held in place by friction fit or a couple of spring clips. Seal the edges with adhesive foam tape for a snug fit. Takes 10 seconds to install/remove.
+      </div>
+
+      <table class="bom-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Est. Price</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>AC Infinity Cloudline T4 — 4" inline duct fan<span class="note">205 CFM, variable speed, quiet</span></td>
+            <td class="qty">1</td>
+            <td class="price">$40–55</td>
+            <td>The T4 is overkill for this volume — which is exactly right. You want it running at low speed = quiet.</td>
+          </tr>
+          <tr>
+            <td>4" insulated flex duct — 8 ft<span class="note">R4.2 or better insulated</span></td>
+            <td class="qty">1</td>
+            <td class="price">$15–20</td>
+            <td>Enough length to reach from cart to window</td>
+          </tr>
+          <tr>
+            <td>4" dryer vent cap — exterior hood<span class="note">Louvered with pest screen</span></td>
+            <td class="qty">1</td>
+            <td class="price">$8</td>
+            <td>Mounts on the outside face of the foam insert</td>
+          </tr>
+          <tr>
+            <td>1" rigid foam insulation board — 2'&times;2' piece<span class="note">XPS (pink/blue board)</span></td>
+            <td class="qty">1</td>
+            <td class="price">$5</td>
+            <td>Cut to fit casement window opening</td>
+          </tr>
+          <tr>
+            <td>Adhesive foam weatherstrip tape</td>
+            <td class="qty">1 roll</td>
+            <td class="price">$5</td>
+            <td>Seals foam insert edges in window frame</td>
+          </tr>
+          <tr>
+            <td>4" hose clamps</td>
+            <td class="qty">4</td>
+            <td class="price">$6</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Activated carbon pre-filter (optional)<span class="note">Carbon filter pad, cut to fit</span></td>
+            <td class="qty">1 pack</td>
+            <td class="price">$10–15</td>
+            <td>Reduces residual odor; replace every few months of active use</td>
+          </tr>
+          <tr class="subtotal-row">
+            <td colspan="2">Ventilation Subtotal</td>
+            <td class="price">~$79–114</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 5: Sound Dampening -->
+  <div class="section">
+    <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="number">5</div>
+      <h2>Sound Dampening</h2>
+      <span class="est">~$30–60</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <p>The DeWalt DWP611 is rated around 79 dB by DeWalt, but in practice when cutting it's 90+ dB. The enclosure with sealed panels will knock that down 15–25 dB depending on how tight your seals are. Combined with the rubber mat under the cart, you're looking at "loud conversation" levels (~65–70 dB) outside the enclosure instead of "jet engine in a closet."</p>
+
+      <h3>Key strategies (most are already covered above)</h3>
+      <ul>
+        <li><strong>Enclosure panels:</strong> 1/4" polycarbonate provides good mass for sound blocking</li>
+        <li><strong>Seal all gaps:</strong> Sound leaks through the smallest opening — use rubber gasket/weatherstrip on every panel edge and the door seal</li>
+        <li><strong>Rubber mat under cart:</strong> Decouples vibration from the floor</li>
+        <li><strong>Optional: mass-loaded vinyl (MLV)</strong> on the inside of opaque panels adds significant sound blocking. 1 lb/sqft MLV is the standard for sound isolation.</li>
+        <li><strong>Optional: acoustic foam</strong> on the inside ceiling of the enclosure reduces resonance (not to be confused with sound blocking — foam absorbs reflections inside, MLV blocks transmission outside)</li>
+      </ul>
+
+      <div class="tip">
+        <strong>Reality check:</strong> Even with all this, running a DeWalt router in a basement will be audible upstairs. It won't be obnoxious, but it won't be silent. The laser, on the other hand, is nearly silent — just the fan noise.
+      </div>
+
+      <table class="bom-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Est. Price</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Mass-loaded vinyl (MLV) — 1 lb/sqft<span class="note">Line inside of opaque panels (sides, top, back)</span></td>
+            <td class="qty">~25 sqft</td>
+            <td class="price">$30–50</td>
+            <td>Optional but effective. Adds ~5-8 dB reduction.</td>
+          </tr>
+          <tr>
+            <td>Acoustic foam panels — 1" thick<span class="note">Stick to inside ceiling of enclosure</span></td>
+            <td class="qty">2–4 tiles</td>
+            <td class="price">$10–15</td>
+            <td>Optional. Reduces internal resonance.</td>
+          </tr>
+          <tr class="subtotal-row">
+            <td colspan="2">Sound Dampening Subtotal</td>
+            <td class="price">~$30–60</td>
+            <td>Most sound reduction comes from the enclosure itself</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 6: "Always Ready" Control Setup -->
+  <div class="section">
+    <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="number">6</div>
+      <h2>"Always Ready" Control Setup</h2>
+      <span class="est">~$50–200</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <p>The goal: walk up, flip one switch (or zero switches), and start cutting. No hunting for laptops, no plugging in USB cables, no launching software. This is the ADHD-friendly CNC station.</p>
+
+      <h3>Dedicated Controller</h3>
+      <ul>
+        <li><strong>Option A: Cheap refurb laptop ($50–100)</strong> — a ThinkPad T450 or similar from eBay. Runs gSender, Candle, or LightBurn permanently. Lid closed, sitting on the cart shelf or mounted to the side with a VESA bracket. Connect a small monitor or use the laptop screen.</li>
+        <li><strong>Option B: Raspberry Pi + touchscreen ($80–120)</strong> — runs CNCjs or a web-based sender. Compact, low-power, always-on. Pair with a 7" touchscreen for a clean setup.</li>
+        <li><strong>Option C: Your offline controller</strong> — you already bought the Genmitsu offline controller. For simple jobs loaded from SD card, this works with zero computer needed. Not great for complex jobs or laser work though.</li>
+      </ul>
+
+      <h3>Permanent Wiring</h3>
+      <ul>
+        <li><strong>USB panel mount passthrough</strong> — USB-B (or whatever your GRBL board uses) on the enclosure panel, USB-A on the outside to the controller. Cable stays connected to the CNC board permanently.</li>
+        <li><strong>Monitor arm:</strong> clamp-style VESA mount attached to the cart frame or a shelf post. A 15–17" monitor at eye level. No wall mounting needed.</li>
+        <li><strong>Power strip on the cart frame</strong> — one switch for everything. Router, controller, monitor, shop vac (via iVac), laser PSU, vent fan.</li>
+      </ul>
+
+      <h3>Software Suggestions</h3>
+      <ul>
+        <li><strong>CNC routing:</strong> gSender (free, great UI, runs on everything)</li>
+        <li><strong>Laser:</strong> LightBurn ($60, worth every penny for a 10W+ laser)</li>
+        <li><strong>CAD/CAM:</strong> Fusion 360 (free personal), Carbide Create (free), or Vectric VCarve</li>
+      </ul>
+
+      <table class="bom-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Est. Price</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Refurb laptop or Raspberry Pi<span class="note">Dedicated CNC controller — always on, always connected</span></td>
+            <td class="qty">1</td>
+            <td class="price">$50–120</td>
+            <td>Refurb ThinkPad on eBay is the sweet spot</td>
+          </tr>
+          <tr>
+            <td>Monitor — 15–17" (optional)<span class="note">If using a Pi or closed-lid laptop</span></td>
+            <td class="qty">1</td>
+            <td class="price">$0–60</td>
+            <td>Use one you have, or $40 refurb on eBay</td>
+          </tr>
+          <tr>
+            <td>Monitor arm — clamp mount VESA<span class="note">Clamps to cart/table edge</span></td>
+            <td class="qty">1</td>
+            <td class="price">$15–25</td>
+            <td>Amazon basics or similar</td>
+          </tr>
+          <tr>
+            <td>USB panel-mount passthrough<span class="note">Bulkhead USB-B to USB-A, or USB-C</span></td>
+            <td class="qty">1</td>
+            <td class="price">$8</td>
+            <td>Keeps cable permanently routed through enclosure</td>
+          </tr>
+          <tr>
+            <td>LightBurn software license</td>
+            <td class="qty">1</td>
+            <td class="price">$60</td>
+            <td>If you don't already have it. One-time purchase for GRBL.</td>
+          </tr>
+          <tr class="subtotal-row">
+            <td colspan="2">Control Setup Subtotal</td>
+            <td class="price">~$73–273</td>
+            <td>Heavily depends on what you already own</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Grand Total -->
+  <div class="grand-total">
+    <div class="label">Estimated Total Build Cost</div>
+    <div class="amount">$750 – $1,200</div>
+    <div class="range">Depends on what you already own (shop vac, monitor, laptop, etc.) and DIY vs. buy decisions.<br>The enclosure is the biggest line item. Everything else is off-the-shelf.</div>
+  </div>
+
+  <!-- Section 7: Build Order -->
+  <div class="section">
+    <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="number">7</div>
+      <h2>Suggested Build Order</h2>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <h3>Phase 1 — Get Cutting Fast (Weekend 1)</h3>
+      <ul>
+        <li>Set up the rolling cart/workbench with rubber mat</li>
+        <li>Mount the PROVerXL to the cart surface (bolt through MDF spoilboard)</li>
+        <li>Set up the dedicated controller (laptop + USB) and test connectivity</li>
+        <li>Run test cuts in open air just to verify everything works after the move</li>
+      </ul>
+
+      <h3>Phase 2 — Enclosure (Weekend 2–3)</h3>
+      <ul>
+        <li>Order aluminum extrusion and connectors from T-Nutz (ships in ~1 week)</li>
+        <li>Order polycarbonate panels — have them cut to size if possible</li>
+        <li>Assemble frame, mount panels, install door with hinges and latches</li>
+        <li>Install dust port and exhaust port bulkheads</li>
+        <li>Install USB passthrough</li>
+      </ul>
+
+      <h3>Phase 3 — Dust + Ventilation (same weekend as enclosure)</h3>
+      <ul>
+        <li>Set up cyclone separator + shop vac on lower shelf</li>
+        <li>Connect hoses, install iVac switch</li>
+        <li>Build the casement window foam insert with vent cap</li>
+        <li>Run exhaust duct from enclosure to window</li>
+        <li>Test: run the router for 5 minutes cutting MDF, check dust containment</li>
+        <li>Test: run the laser for 5 minutes, check fume extraction</li>
+      </ul>
+
+      <h3>Phase 4 — Polish (whenever)</h3>
+      <ul>
+        <li>Add MLV / acoustic foam if noise is still a problem</li>
+        <li>Mount monitor arm, clean up cable routing</li>
+        <li>Add LED strip lighting inside the enclosure (makes a huge difference for visibility)</li>
+        <li>Optional: add a cheap webcam inside the enclosure for remote monitoring via your phone</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Section 8: Reference Links -->
+  <div class="section">
+    <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="number">8</div>
+      <h2>Reference Links & Resources</h2>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <div class="links-grid">
+        <a href="https://github.com/briangunderson/Genmitsu-PROVerXL-4030-Enclosure" target="_blank" class="link-card">
+          <div class="icon">&#128193;</div>
+          <div class="info">
+            <div class="title">Your Enclosure Fork — CAD + BOM</div>
+            <div class="desc">Your fork of Jason Webb's design — track your mods here</div>
+          </div>
+        </a>
+        <a href="https://github.com/jasonwebb/Genmitsu-PROVerXL-4030-Enclosure" target="_blank" class="link-card">
+          <div class="icon">&#128193;</div>
+          <div class="info">
+            <div class="title">Upstream Enclosure — Original Design</div>
+            <div class="desc">Original Fusion 360 files and parts lists by Jason Webb</div>
+          </div>
+        </a>
+        <a href="https://www.sainsmart.com/products/genmitsu-proverxl-4030-cnc-router-with-carveco-maker-subscription" target="_blank" class="link-card">
+          <div class="icon">&#9881;</div>
+          <div class="info">
+            <div class="title">PROVerXL 4030 — SainSmart</div>
+            <div class="desc">Official product page, manuals, and firmware</div>
+          </div>
+        </a>
+        <a href="https://www.tnutz.com/product/exm-3030/" target="_blank" class="link-card">
+          <div class="icon">&#128295;</div>
+          <div class="info">
+            <div class="title">T-Nutz — 30mm Extrusion</div>
+            <div class="desc">Source for aluminum extrusion and connectors</div>
+          </div>
+        </a>
+        <a href="https://sienci.com/gsender/" target="_blank" class="link-card">
+          <div class="icon">&#128187;</div>
+          <div class="info">
+            <div class="title">gSender — Free CNC Controller</div>
+            <div class="desc">Open-source GRBL sender with great UI by Sienci Labs</div>
+          </div>
+        </a>
+        <a href="https://lightburnsoftware.com/" target="_blank" class="link-card">
+          <div class="icon">&#128293;</div>
+          <div class="info">
+            <div class="title">LightBurn — Laser Control</div>
+            <div class="desc">Best-in-class laser cutting/engraving software ($60 for GRBL)</div>
+          </div>
+        </a>
+        <a href="https://www.myerswoodshop.com/blog/enclosure" target="_blank" class="link-card">
+          <div class="icon">&#128214;</div>
+          <div class="info">
+            <div class="title">Ultimate CNC Enclosure Build</div>
+            <div class="desc">Detailed enclosure build walkthrough by Myers Woodshop</div>
+          </div>
+        </a>
+      </div>
+
+      <h3>Your Amazon Order Reference</h3>
+      <p style="color: var(--text-dim); font-size: 0.9rem;">
+        Original CNC order: #111-6977644-7594644 (Oct 2023, $863.92)<br>
+        Replacement unit: #113-2206700-6953012 (Nov 2023)<br>
+        Accessories order: #113-5524378-9788251 (offline controller, T-tracks, materials, router bits)<br>
+        Dust shoe: #111-0913477-8070644 (69mm, for PROVerXL series)
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Generated April 2026 &bull; Prices are estimates and may vary &bull; Always verify laser safety ratings before purchasing panels
+</div>
+
+<script>
+// Open first section by default, rest are closed
+// Toggle handled by onclick on section-header
+</script>
+
+</body>
+</html>
